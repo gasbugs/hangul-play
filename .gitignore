@@ -30,15 +30,15 @@ dist/
 *.iml
 *.log
 
-# env files (can opt-in for committing if needed)
-.env*
-
-# Firebase configurations (Sensitive)
-google-services.json
-GoogleService-Info.plist
-firebase-debug.log
+# env files (Sensitive)
 .env
 .env.local
+.env.development.local
+.env.test.local
+.env.production.local
+
+# Allow env template
+!.env.example
 
 # Flutter/Dart
 .dart_tool/
