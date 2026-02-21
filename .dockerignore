@@ -1,0 +1,20 @@
+.git
+.dart_tool
+.github
+.idea
+build/
+android/
+ios/
+linux/
+macos/
+windows/
+test/
+node_modules/
+*iml
+
+# Sensitive files
+google-services.json
+GoogleService-Info.plist
+*.jks
+*.keystore
+.env*

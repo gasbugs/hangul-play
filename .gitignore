@@ -33,6 +33,28 @@ yarn-error.log*
 # env files (can opt-in for committing if needed)
 .env*
 
+# Firebase configurations (Sensitive)
+google-services.json
+GoogleService-Info.plist
+firebase-debug.log
+.env
+.env.local
+
+# Flutter/Dart
+.dart_tool/
+.flutter-plugins
+.flutter-plugins-dependencies
+.packages
+.pub-cache/
+.pub/
+
+# Mobile Keys
+*.jks
+*.keystore
+*.p12
+*.key
+*.mobileprovision
+
 # vercel
 .vercel
 

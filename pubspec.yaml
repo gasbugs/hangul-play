@@ -1,0 +1,34 @@
+name: hangul_play
+description: A Hangul handwriting study app for children.
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  flutter_tts: ^3.8.3
+  confetti: ^0.7.0
+  google_fonts: ^6.1.0
+  provider: ^6.0.5
+  firebase_core: ^3.1.1
+  firebase_auth: ^5.1.2
+  cloud_firestore: ^5.0.2
+  google_sign_in: ^6.2.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/
+#  fonts:
+#    - family: NanumGothic
+#      fonts:
+#        - asset: fonts/NanumGothic-Regular.ttf
+#        - asset: fonts/NanumGothic-Bold.ttf
+#          weight: 700
