@@ -36,9 +36,11 @@ dist/
 .env.development.local
 .env.test.local
 .env.production.local
+config/secrets.json
 
 # Allow env template
 !.env.example
+!config/secrets.json.example
 
 # Flutter/Dart
 .dart_tool/
