@@ -1,0 +1,37 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: hangul-play
+  labels:
+    app: hangul-play
+spec:
+  replicas: 2
+  selector:
+    matchLabels:
+      app: hangul-play
+  template:
+    metadata:
+      labels:
+        app: hangul-play
+    spec:
+      containers:
+      - name: hangul-play
+        image: gasbugs/hangul-play:latest
+        ports:
+        - containerPort: 8080
+        envFrom:
+        - configMapRef:
+            name: hangul-play-config
+        - secretRef:
+            name: hangul-play-secret
+        resources:
+          limits:
+            cpu: "500m"
+            memory: "512Mi"
+          requests:
+            cpu: "100m"
+            memory: "128Mi"
+        securityContext:
+          runAsNonRoot: true
+          runAsUser: 101 # nginx user in the image
+          allowPrivilegeEscalation: false

@@ -63,5 +63,14 @@ google-services.json
 
 # typescript
 # K8s & Helm (Private config)
-k8s/
+k8s/secret.yaml
+k8s/configmap.yaml
 helm/
+
+# Allow K8s non-sensitive manifests
+!k8s/*.yaml
+k8s/secret.yaml
+k8s/configmap.yaml
+
+# Configuration templates
+!config/templates/
