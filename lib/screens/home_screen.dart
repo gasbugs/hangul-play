@@ -5,14 +5,15 @@ import 'package:firebase_auth/firebase_auth.dart';
 import '../models/hangul_data.dart';
 import '../widgets/handwriting_canvas.dart';
 import '../utils/speech_service.dart';
-import '../services/auth_service.dart';
 import '../services/database_service.dart';
 import '../models/user_progress.dart';
-
-import 'stats_screen.dart';
+import '../services/sticker_service.dart';
+import 'sticker_book_screen.dart';
 import 'word_forest_screen.dart';
 import 'sound_meadow_screen.dart';
 import 'profile_screen.dart';
+import '../widgets/navigation_footer.dart';
+import '../widgets/success_overlay.dart';
 
 class HomeScreen extends StatefulWidget {
   const HomeScreen({super.key});
@@ -26,12 +27,13 @@ class _HomeScreenState extends State<HomeScreen> {
   bool _showSuccess = false;
   late ConfettiController _confettiController;
   final SpeechService _speechService = SpeechService();
-  final AuthService _authService = AuthService();
   final DatabaseService _dbService = DatabaseService();
+  final StickerService _stickerService = StickerService(); // Add StickerService
   final GlobalKey<HandwritingCanvasState> _canvasKey = GlobalKey<HandwritingCanvasState>();
-  User? _user = FirebaseAuth.instance.currentUser;
+  final User? _user = FirebaseAuth.instance.currentUser;
   double _lastScorePercentage = 0.0;
   int _lastStars = 0;
+  int _currentStreak = 0; // Add this
 
   @override
   void initState() {
@@ -59,13 +61,12 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _onComplete() async {
-    // Trigger scoring from canvas
     await _canvasKey.currentState?.submit();
   }
 
   void _handleScore(int score, double percentage) async {
     if (percentage < 70.0) {
-      _canvasKey.currentState?.clear(); // Clear canvas on failure
+      _canvasKey.currentState?.clear();
       ScaffoldMessenger.of(context).showSnackBar(
         const SnackBar(
           content: Text(' 조금 더 정성껏 채워야 해요! 70%를 못 넘었어요. 다시 해볼까요?'),
@@ -83,24 +84,39 @@ class _HomeScreenState extends State<HomeScreen> {
       _lastStars = score;
     });
 
-    // Save progress and score to Firestore
     if (_user != null) {
+      final char = hangulList[_currentIndex].char;
+      
+      // Save progress (this also updates streak)
       await _dbService.saveProgress(UserProgress(
         userId: _user!.uid,
         lastIndex: (_currentIndex + 1) % hangulList.length,
-        completedChars: [hangulList[_currentIndex].char],
+        completedChars: [char],
       ));
       
+      // Award sticker
+      await _stickerService.awardSticker(_user!.uid, char);
+      
+      // Get updated streak for the overlay
+      final progress = await _dbService.getProgress(_user!.uid);
+      final currentStreak = (progress != null) ? (progress.toMap()['streak'] ?? 0) : 0;
+
+      setState(() {
+        _showSuccess = true;
+        _lastScorePercentage = percentage;
+        _lastStars = score;
+        _currentStreak = currentStreak; // Store in local state
+      });
+
       await FirebaseFirestore.instance.collection('daily_scores').add({
         'userId': _user!.uid,
         'date': DateTime.now().toIso8601String().substring(0, 10),
         'score': score,
-        'char': hangulList[_currentIndex].char,
+        'char': char,
         'timestamp': FieldValue.serverTimestamp(),
       });
     }
 
-    // Auto-dismiss after 2.5 seconds
     Future.delayed(const Duration(milliseconds: 2500), () {
       if (mounted && _showSuccess) {
         _goToNextCharacter();
@@ -145,6 +161,11 @@ class _HomeScreenState extends State<HomeScreen> {
           ],
         ),
         actions: [
+          IconButton(
+            onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const StickerBookScreen())),
+            icon: const Icon(Icons.auto_awesome, color: Color(0xFFFF85A1)),
+            tooltip: '나의 스티커 북',
+          ),
           IconButton(
             onPressed: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const ProfileScreen())),
             icon: const Icon(Icons.account_circle, color: Color(0xFFFF85A1)),
@@ -198,7 +219,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             backgroundColor: Colors.white,
                             foregroundColor: const Color(0xFF2C3E50),
                             side: const BorderSide(color: Color(0xFF77E4D4), width: 2),
-                            shape: StadiumBorder(),
+                            shape: const StadiumBorder(),
                           ),
                         ),
                       ],
@@ -236,109 +257,26 @@ class _HomeScreenState extends State<HomeScreen> {
                       ],
                     ),
                     const SizedBox(height: 40),
-                    _buildNavigationFooter(),
+                    NavigationFooter(
+                      onMapTap: () {},
+                      onForestTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const WordForestScreen())),
+                      onMeadowTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const SoundMeadowScreen())),
+                      onCastleTap: () => Navigator.push(context, MaterialPageRoute(builder: (context) => const StickerBookScreen())),
+                    ),
                   ],
                 ),
               ),
             ),
           ),
           if (_showSuccess)
-            _buildSuccessOverlay(),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildNavigationFooter() {
-    return Row(
-      mainAxisAlignment: MainAxisAlignment.spaceEvenly,
-      children: [
-        _navIcon(Icons.map, '월드맵', Colors.amber, () {}),
-        _navIcon(Icons.forest, '단어숲', Colors.green, () {
-          Navigator.push(context, MaterialPageRoute(builder: (context) => const WordForestScreen()));
-        }),
-        _navIcon(Icons.music_note, '소리들판', Colors.blue, () {
-          Navigator.push(context, MaterialPageRoute(builder: (context) => const SoundMeadowScreen()));
-        }),
-        _navIcon(Icons.castle, '훈장성', Colors.purple, () {
-          Navigator.push(context, MaterialPageRoute(builder: (context) => const BadgeCastleScreen()));
-        }),
-      ],
-    );
-  }
-
-  Widget _navIcon(IconData icon, String label, Color color, VoidCallback onTap) {
-    return GestureDetector(
-      onTap: onTap,
-      child: Column(
-        children: [
-          Container(
-            padding: const EdgeInsets.all(12),
-            decoration: BoxDecoration(color: color.withOpacity(0.2), shape: BoxShape.circle),
-            child: Icon(icon, color: color, size: 30),
-          ),
-          const SizedBox(height: 5),
-          Text(label, style: const TextStyle(fontSize: 12, fontWeight: FontWeight.bold)),
-        ],
-      ),
-    );
-  }
-
-  Widget _buildSuccessOverlay() {
-    return GestureDetector(
-      onTap: _goToNextCharacter,
-      child: Container(
-        color: Colors.white.withOpacity(0.95),
-        child: Stack(
-          children: [
-            // Close button (X)
-            Positioned(
-              top: 40,
-              right: 20,
-              child: IconButton(
-                icon: const Icon(Icons.close, size: 40, color: Colors.grey),
-                onPressed: _goToNextCharacter,
-              ),
+            SuccessOverlay(
+              scorePercentage: _lastScorePercentage,
+              stars: _lastStars,
+              streak: _currentStreak, // Add this
+              confettiController: _confettiController,
+              onDismiss: _goToNextCharacter,
             ),
-            Center(
-              child: Column(
-                mainAxisSize: MainAxisSize.min,
-                children: [
-                  const Text(
-                    '🎉 우와!\n최고예요! 🌈',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 36, fontWeight: FontWeight.bold, color: Color(0xFFFF85A1)),
-                  ),
-                  const SizedBox(height: 10),
-                  Text(
-                    '${_lastScorePercentage.toStringAsFixed(1)}% 맞춰보았어요!',
-                    style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.blueGrey),
-                  ),
-                  const SizedBox(height: 20),
-                  Row(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: List.generate(3, (index) => Icon(
-                      Icons.star, 
-                      color: index < _lastStars ? Colors.amber : Colors.grey.shade300, 
-                      size: index == 1 ? 70 : 50,
-                    )),
-                  ),
-                  const SizedBox(height: 30),
-                  const Text(
-                    '화면을 터작하면\n다음 글자로 넘어가요!',
-                    textAlign: TextAlign.center,
-                    style: TextStyle(fontSize: 18, color: Colors.blueAccent),
-                  ),
-                  ConfettiWidget(
-                    confettiController: _confettiController,
-                    blastDirectionality: BlastDirectionality.explosive,
-                    shouldLoop: false,
-                  ),
-                ],
-              ),
-            ),
-          ],
-        ),
+        ],
       ),
     );
   }

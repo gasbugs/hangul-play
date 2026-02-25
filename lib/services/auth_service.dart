@@ -13,28 +13,36 @@ class AuthService {
   Future<User?> signInWithGoogle() async {
     try {
       if (kIsWeb) {
-        // Use Firebase Popup for Web - more reliable without complex setup
-        GoogleAuthProvider googleProvider = GoogleAuthProvider();
-        final UserCredential userCredential = await _auth.signInWithPopup(googleProvider);
-        return userCredential.user;
+        return await _signInWithGoogleWeb();
       } else {
-        // Use GoogleSignIn package for Mobile
-        final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
-        if (googleUser == null) return null;
-
-        final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
-        final AuthCredential credential = GoogleAuthProvider.credential(
-          accessToken: googleAuth.accessToken,
-          idToken: googleAuth.idToken,
-        );
-
-        final UserCredential userCredential = await _auth.signInWithCredential(credential);
-        return userCredential.user;
+        return await _signInWithGoogleMobile();
       }
     } catch (e) {
-      print("Error signing in with Google: $e");
+      // debugPrint("Error signing in with Google: $e");
       return null;
     }
+  }
+
+  Future<User?> _signInWithGoogleWeb() async {
+    // Use Firebase Popup for Web - more reliable without complex setup
+    GoogleAuthProvider googleProvider = GoogleAuthProvider();
+    final UserCredential userCredential = await _auth.signInWithPopup(googleProvider);
+    return userCredential.user;
+  }
+
+  Future<User?> _signInWithGoogleMobile() async {
+    // Use GoogleSignIn package for Mobile
+    final GoogleSignInAccount? googleUser = await _googleSignIn.signIn();
+    if (googleUser == null) return null;
+
+    final GoogleSignInAuthentication googleAuth = await googleUser.authentication;
+    final AuthCredential credential = GoogleAuthProvider.credential(
+      accessToken: googleAuth.accessToken,
+      idToken: googleAuth.idToken,
+    );
+
+    final UserCredential userCredential = await _auth.signInWithCredential(credential);
+    return userCredential.user;
   }
 
   // Sign out

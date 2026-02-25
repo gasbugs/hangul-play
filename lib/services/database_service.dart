@@ -11,8 +11,43 @@ class DatabaseService {
             progress.toMap(),
             SetOptions(merge: true),
           );
+      
+      // Update streak
+      await _updateStreak(progress.userId);
     } catch (e) {
-      print("Error saving progress: $e");
+      // debugPrint("Error saving progress: $e");
+    }
+  }
+
+  Future<void> _updateStreak(String userId) async {
+    final userDoc = _db.collection('users').doc(userId);
+    final snapshot = await userDoc.get();
+    
+    if (snapshot.exists) {
+      final data = snapshot.data() as Map<String, dynamic>;
+      final lastActiveDate = data['lastActiveDate'] as String?;
+      final today = DateTime.now().toIso8601String().substring(0, 10);
+      
+      if (lastActiveDate != today) {
+        int currentStreak = data['streak'] ?? 0;
+        final yesterday = DateTime.now().subtract(const Duration(days: 1)).toIso8601String().substring(0, 10);
+        
+        if (lastActiveDate == yesterday) {
+          currentStreak += 1;
+        } else {
+          currentStreak = 1;
+        }
+        
+        await userDoc.update({
+          'streak': currentStreak,
+          'lastActiveDate': today,
+        });
+      }
+    } else {
+      await userDoc.set({
+        'streak': 1,
+        'lastActiveDate': DateTime.now().toIso8601String().substring(0, 10),
+      }, SetOptions(merge: true));
     }
   }
 
@@ -24,7 +59,7 @@ class DatabaseService {
         return UserProgress.fromMap(doc.data() as Map<String, dynamic>);
       }
     } catch (e) {
-      print("Error getting progress: $e");
+      // debugPrint("Error getting progress: $e");
     }
     return null;
   }

@@ -13,17 +13,7 @@ void main() async {
   await ConfigService.loadConfig();
   
   // 2. Initialize Firebase with dynamic config
-  await Firebase.initializeApp(
-    options: FirebaseOptions(
-      apiKey: ConfigService.firebaseApiKey,
-      authDomain: ConfigService.firebaseAuthDomain,
-      projectId: ConfigService.firebaseProjectId,
-      storageBucket: ConfigService.firebaseStorageBucket,
-      messagingSenderId: ConfigService.firebaseMessagingSenderId,
-      appId: ConfigService.firebaseAppId,
-      measurementId: ConfigService.firebaseMeasurementId,
-    ),
-  );
+  await Firebase.initializeApp(options: ConfigService.firebaseOptions);
   
   runApp(const HangulPlayApp());
 }

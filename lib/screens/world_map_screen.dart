@@ -2,8 +2,8 @@ import 'package:flutter/material.dart';
 import 'home_screen.dart';
 import 'word_forest_screen.dart';
 import 'sound_meadow_screen.dart';
-import 'stats_screen.dart';
 import 'profile_screen.dart';
+import 'sticker_book_screen.dart';
 
 class WorldMapScreen extends StatelessWidget {
   const WorldMapScreen({super.key});
@@ -48,7 +48,7 @@ class WorldMapScreen extends StatelessWidget {
                     _buildIsland(context, '마법 캔버스', Icons.edit, Colors.amber, 0.2, 0.2, const HomeScreen()),
                     _buildIsland(context, '단어 숲', Icons.forest, Colors.green, 0.6, 0.1, const WordForestScreen()),
                     _buildIsland(context, '소리 들판', Icons.music_note, Colors.orange, 0.4, 0.4, const SoundMeadowScreen()),
-                    _buildIsland(context, '훈장 성', Icons.castle, Colors.purple, 0.1, 0.6, const BadgeCastleScreen()),
+                    _buildIsland(context, '훈장 성', Icons.castle, Colors.purple, 0.1, 0.6, const StickerBookScreen()),
                     _buildIsland(context, '문장 놀이터', Icons.videogame_asset, Colors.blue, 0.7, 0.7, null), // TODO
                   ],
                 ),
@@ -81,7 +81,7 @@ class WorldMapScreen extends StatelessWidget {
               decoration: BoxDecoration(
                 color: Colors.white,
                 shape: BoxShape.circle,
-                boxShadow: [BoxShadow(color: color.withOpacity(0.4), blurRadius: 15, spreadRadius: 5)],
+                boxShadow: [BoxShadow(color: color.withValues(alpha: 0.4), blurRadius: 15, spreadRadius: 5)],
                 border: Border.all(color: color, width: 3),
               ),
               child: Icon(icon, color: color, size: 50),
@@ -89,7 +89,7 @@ class WorldMapScreen extends StatelessWidget {
             const SizedBox(height: 10),
             Container(
               padding: const EdgeInsets.symmetric(horizontal: 10, vertical: 5),
-              decoration: BoxDecoration(color: Colors.white.withOpacity(0.8), borderRadius: BorderRadius.circular(15)),
+              decoration: BoxDecoration(color: Colors.white.withValues(alpha: 0.8), borderRadius: BorderRadius.circular(15)),
               child: Text(label, style: const TextStyle(fontWeight: FontWeight.bold)),
             ),
           ],

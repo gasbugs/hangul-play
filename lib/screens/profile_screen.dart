@@ -45,7 +45,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                 decoration: BoxDecoration(
                   color: Colors.white,
                   shape: BoxShape.circle,
-                  boxShadow: [BoxShadow(color: Colors.pink.withOpacity(0.1), blurRadius: 20)],
+                  boxShadow: [BoxShadow(color: Colors.pink.withValues(alpha: 0.1), blurRadius: 20)],
                   border: Border.all(color: Colors.pinkAccent, width: 4),
                 ),
                 child: Center(
@@ -71,7 +71,7 @@ class _ProfileScreenState extends State<ProfileScreen> {
                   child: Container(
                     padding: const EdgeInsets.all(10),
                     decoration: BoxDecoration(
-                      color: _selectedAvatar == avatar ? Colors.pinkAccent.withOpacity(0.2) : Colors.white,
+                      color: _selectedAvatar == avatar ? Colors.pinkAccent.withValues(alpha: 0.2) : Colors.white,
                       borderRadius: BorderRadius.circular(15),
                       border: Border.all(
                         color: _selectedAvatar == avatar ? Colors.pinkAccent : Colors.grey.shade300,

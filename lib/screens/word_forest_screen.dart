@@ -160,7 +160,7 @@ class _WordForestScreenState extends State<WordForestScreen> {
     return GestureDetector(
       onTap: _goToNextWord,
       child: Container(
-        color: Colors.white.withOpacity(0.9),
+        color: Colors.white.withValues(alpha: 0.9),
         child: Stack(
           children: [
             Center(

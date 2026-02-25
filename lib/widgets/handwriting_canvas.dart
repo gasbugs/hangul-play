@@ -19,7 +19,7 @@ class HandwritingCanvas extends StatefulWidget {
 }
 
 class HandwritingCanvasState extends State<HandwritingCanvas> {
-  List<Offset?> _points = [];
+  final List<Offset?> _points = [];
 
   void clear() {
     setState(() {
@@ -105,9 +105,13 @@ class HandwritingCanvasState extends State<HandwritingCanvas> {
     if (finalPercentage > 100.0) finalPercentage = 100.0;
     
     int stars = 0;
-    if (finalPercentage >= 90) stars = 3;
-    else if (finalPercentage >= 80) stars = 2;
-    else if (finalPercentage >= 70) stars = 1;
+    if (finalPercentage >= 90) {
+      stars = 3;
+    } else if (finalPercentage >= 80) {
+      stars = 2;
+    } else if (finalPercentage >= 70) {
+      stars = 1;
+    }
     
     return {'score': stars, 'percentage': finalPercentage};
   }
@@ -130,7 +134,7 @@ class HandwritingCanvasState extends State<HandwritingCanvas> {
         border: Border.all(color: const Color(0xFFFFD93D), width: 4),
         boxShadow: [
           BoxShadow(
-            color: Colors.black.withOpacity(0.05),
+            color: Colors.black.withValues(alpha: 0.05),
             blurRadius: 10,
             spreadRadius: 2,
           )
@@ -156,7 +160,7 @@ class HandwritingCanvasState extends State<HandwritingCanvas> {
                 style: TextStyle(
                   fontSize: fontSize,
                   fontWeight: FontWeight.bold,
-                  color: Colors.grey.withOpacity(0.2),
+                  color: Colors.grey.withValues(alpha: 0.2),
                   letterSpacing: widget.targetChar.length > 1 ? 4.0 : 0.0,
                 ),
               ),
