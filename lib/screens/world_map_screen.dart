@@ -1,5 +1,5 @@
 import 'package:flutter/material.dart';
-import 'home_screen.dart';
+import 'magic_canvas_screen.dart';
 import 'word_forest_screen.dart';
 import 'sound_meadow_screen.dart';
 import 'profile_screen.dart';
@@ -45,7 +45,7 @@ class WorldMapScreen extends StatelessWidget {
                 child: Stack(
                   children: [
                     // A simple representation of islands on a map
-                    _buildIsland(context, '마법 캔버스', Icons.edit, Colors.amber, 0.2, 0.2, const HomeScreen()),
+                    _buildIsland(context, '마법 캔버스', Icons.edit, Colors.amber, 0.2, 0.2, const MagicCanvasScreen()),
                     _buildIsland(context, '단어 숲', Icons.forest, Colors.green, 0.6, 0.1, const WordForestScreen()),
                     _buildIsland(context, '소리 들판', Icons.music_note, Colors.orange, 0.4, 0.4, const SoundMeadowScreen()),
                     _buildIsland(context, '훈장 성', Icons.castle, Colors.purple, 0.1, 0.6, const StickerBookScreen()),

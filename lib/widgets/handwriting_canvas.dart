@@ -4,6 +4,7 @@ import 'dart:typed_data';
 
 class HandwritingCanvas extends StatefulWidget {
   final String targetChar;
+  final bool isPuzzleMode;
   final Function(int score, double percentage) onComplete;
   final VoidCallback onClear;
 
@@ -12,6 +13,7 @@ class HandwritingCanvas extends StatefulWidget {
     required this.targetChar,
     required this.onComplete,
     required this.onClear,
+    this.isPuzzleMode = false,
   });
 
   @override
@@ -20,27 +22,49 @@ class HandwritingCanvas extends StatefulWidget {
 
 class HandwritingCanvasState extends State<HandwritingCanvas> {
   final List<Offset?> _points = [];
+  bool _isSuccess = false;
+  final List<String> _puzzlePieces = [];
+  final List<String> _placedPieces = [];
+
+  @override
+  void initState() {
+    super.initState();
+    if (widget.isPuzzleMode) {
+      _puzzlePieces.addAll(widget.targetChar.split(''));
+      _puzzlePieces.shuffle();
+    }
+  }
 
   void clear() {
     setState(() {
       _points.clear();
+      _placedPieces.clear();
+      if (widget.isPuzzleMode) {
+        _puzzlePieces.clear();
+        _puzzlePieces.addAll(widget.targetChar.split(''));
+        _puzzlePieces.shuffle();
+      }
     });
     widget.onClear();
   }
 
-  // Returns {score, percentage}
   Future<Map<String, dynamic>> _calculateScore() async {
+    if (widget.isPuzzleMode) {
+      if (_placedPieces.length == widget.targetChar.length) {
+        return {'score': 3, 'percentage': 100.0};
+      }
+      return {'score': 0, 'percentage': 0.0};
+    }
+    
     if (_points.isEmpty) return {'score': 0, 'percentage': 0.0};
 
     const double size = 300.0;
-    const int gridSize = 30; // 30x30 grid for comparison
+    const int gridSize = 30; 
     
-    // 1. Create a bitmask for the target character
     final ui.PictureRecorder recorder = ui.PictureRecorder();
     final Canvas canvas = Canvas(recorder);
-    canvas.scale(gridSize / size); // Scale down to fit gridSize
+    canvas.scale(gridSize / size);
 
-    // Dynamic font size logic (same as build)
     double fontSize = 180.0;
     double letterSpacing = 0.0;
     if (widget.targetChar.length > 1) {
@@ -67,10 +91,9 @@ class HandwritingCanvasState extends State<HandwritingCanvas> {
     final ui.Image targetImg = await recorder.endRecording().toImage(gridSize, gridSize);
     final ByteData? targetData = await targetImg.toByteData(format: ui.ImageByteFormat.rawRgba);
     
-    // 2. Create a bitmask for the user drawing
     final ui.PictureRecorder userRecorder = ui.PictureRecorder();
     final Canvas userCanvas = Canvas(userRecorder);
-    userCanvas.scale(gridSize / size); // Scale down to fit gridSize
+    userCanvas.scale(gridSize / size);
     final userPainter = DrawingPainter(points: _points, strokeWidth: 15.0);
     userPainter.paint(userCanvas, const Size(size, size));
     
@@ -81,10 +104,9 @@ class HandwritingCanvasState extends State<HandwritingCanvas> {
 
     int matchCount = 0;
     int targetTotal = 0;
-    int extraCount = 0; // Penalize points far from the target
+    int extraCount = 0;
 
     for (int i = 0; i < gridSize * gridSize; i++) {
-      // Check alpha channel (3rd byte in RGBA)
       bool isTarget = targetData.getUint8(i * 4 + 3) > 20;
       bool isUser = userData.getUint8(i * 4 + 3) > 20;
 
@@ -99,7 +121,7 @@ class HandwritingCanvasState extends State<HandwritingCanvas> {
     if (targetTotal == 0) return {'score': 1, 'percentage': 0.0};
     
     double coverage = matchCount / targetTotal;
-    double accuracy = matchCount / (matchCount + extraCount * 0.5); // Slight penalty for messy scribbles
+    double accuracy = matchCount / (matchCount + extraCount * 0.5);
     
     double finalPercentage = (coverage * 0.7 + accuracy * 0.3) * 100 * 2.0;
     if (finalPercentage > 100.0) finalPercentage = 100.0;
@@ -118,41 +140,60 @@ class HandwritingCanvasState extends State<HandwritingCanvas> {
 
   @override
   Widget build(BuildContext context) {
-    // Dynamic font size based on text length
     double fontSize = 180.0;
     if (widget.targetChar.length > 1) {
       fontSize = 250.0 / widget.targetChar.length;
       if (fontSize > 120) fontSize = 120;
     }
 
-    return Container(
-      width: 300,
-      height: 300,
-      decoration: BoxDecoration(
-        color: Colors.white,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: const Color(0xFFFFD93D), width: 4),
-        boxShadow: [
-          BoxShadow(
-            color: Colors.black.withValues(alpha: 0.05),
-            blurRadius: 10,
-            spreadRadius: 2,
-          )
+    return Column(
+      children: [
+        Container(
+          width: 300,
+          height: 300,
+          decoration: BoxDecoration(
+            color: Colors.white,
+            borderRadius: BorderRadius.circular(20),
+            border: Border.all(color: const Color(0xFFFFD93D), width: 4),
+            boxShadow: [
+              BoxShadow(
+                color: Colors.black.withOpacity(0.05),
+                blurRadius: 10,
+                spreadRadius: 2,
+              )
+            ],
+          ),
+          child: widget.isPuzzleMode
+              ? _buildPuzzleTarget(fontSize)
+              : _buildDrawingCanvas(fontSize),
+        ),
+        if (widget.isPuzzleMode && _puzzlePieces.isNotEmpty) ...[
+          const SizedBox(height: 20),
+          Wrap(
+            spacing: 15,
+            runSpacing: 10,
+            children: _puzzlePieces.map((char) => _buildDraggablePiece(char)).toList(),
+          ),
         ],
-      ),
-      child: GestureDetector(
-        onPanUpdate: (details) {
-          setState(() {
-            RenderBox renderBox = context.findRenderObject() as RenderBox;
-            _points.add(renderBox.globalToLocal(details.globalPosition));
-          });
-        },
-        onPanEnd: (details) async {
-          _points.add(null);
-        },
-        child: Stack(
+      ],
+    );
+  }
+
+  Widget _buildPuzzleTarget(double fontSize) {
+    return DragTarget<String>(
+      onWillAccept: (data) => data == widget.targetChar[_placedPieces.length],
+      onAccept: (data) {
+        setState(() {
+          _placedPieces.add(data);
+          _puzzlePieces.remove(data);
+        });
+        if (_placedPieces.length == widget.targetChar.length) {
+          submit();
+        }
+      },
+      builder: (context, candidateData, rejectedData) {
+        return Stack(
           children: [
-            // Guide Character
             Center(
               child: Text(
                 widget.targetChar,
@@ -160,18 +201,106 @@ class HandwritingCanvasState extends State<HandwritingCanvas> {
                 style: TextStyle(
                   fontSize: fontSize,
                   fontWeight: FontWeight.bold,
-                  color: Colors.grey.withValues(alpha: 0.2),
+                  color: Colors.grey.withOpacity(0.1),
                   letterSpacing: widget.targetChar.length > 1 ? 4.0 : 0.0,
                 ),
               ),
             ),
-            // User Drawing
-            CustomPaint(
-              size: Size.infinite,
-              painter: DrawingPainter(points: _points),
+            Center(
+              child: Text(
+                _placedPieces.join(''),
+                textAlign: TextAlign.center,
+                style: TextStyle(
+                  fontSize: fontSize,
+                  fontWeight: FontWeight.bold,
+                  color: const Color(0xFF2C3E50),
+                  letterSpacing: widget.targetChar.length > 1 ? 4.0 : 0.0,
+                ),
+              ),
             ),
+            if (candidateData.isNotEmpty)
+              Container(
+                decoration: BoxDecoration(
+                  color: Colors.yellow.withOpacity(0.1),
+                  borderRadius: BorderRadius.circular(16),
+                ),
+              ),
           ],
+        );
+      },
+    );
+  }
+
+  Widget _buildDrawingCanvas(double fontSize) {
+    return GestureDetector(
+      onPanUpdate: (details) {
+        setState(() {
+          RenderBox renderBox = context.findRenderObject() as RenderBox;
+          _points.add(renderBox.globalToLocal(details.globalPosition));
+        });
+      },
+      onPanEnd: (details) async {
+        _points.add(null);
+      },
+      child: Stack(
+        children: [
+          Center(
+            child: Text(
+              widget.targetChar,
+              textAlign: TextAlign.center,
+              style: TextStyle(
+                fontSize: fontSize,
+                fontWeight: FontWeight.bold,
+                color: Colors.grey.withOpacity(0.2),
+                letterSpacing: widget.targetChar.length > 1 ? 4.0 : 0.0,
+              ),
+            ),
+          ),
+          CustomPaint(
+            size: Size.infinite,
+            painter: DrawingPainter(points: _points),
+          ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildDraggablePiece(String char) {
+    return Draggable<String>(
+      data: char,
+      feedback: Material(
+        color: Colors.transparent,
+        child: Container(
+          padding: const EdgeInsets.all(16),
+          decoration: BoxDecoration(
+            color: const Color(0xFFFF85A1),
+            borderRadius: BorderRadius.circular(12),
+            boxShadow: const [BoxShadow(color: Colors.black26, blurRadius: 10)],
+          ),
+          child: Text(
+            char,
+            style: const TextStyle(fontSize: 40, fontWeight: FontWeight.bold, color: Colors.white),
+          ),
         ),
+      ),
+      childWhenDragging: Opacity(
+        opacity: 0.3,
+        child: _pieceContainer(char),
+      ),
+      child: _pieceContainer(char),
+    );
+  }
+
+  Widget _pieceContainer(String char) {
+    return Container(
+      padding: const EdgeInsets.all(16),
+      decoration: BoxDecoration(
+        color: const Color(0xFFFF85A1),
+        borderRadius: BorderRadius.circular(12),
+      ),
+      child: Text(
+        char,
+        style: const TextStyle(fontSize: 32, fontWeight: FontWeight.bold, color: Colors.white),
       ),
     );
   }
