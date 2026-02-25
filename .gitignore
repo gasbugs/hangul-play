@@ -49,6 +49,7 @@ dist/
 .pub/
 
 # Mobile Keys
+google-services.json
 *.jks
 *.keystore
 *.p12
