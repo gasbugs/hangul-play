@@ -2,6 +2,12 @@
 
 # Configuration Sync Script
 # This script reads from config/secrets.json and populates various config files.
+#
+# Affected Files:
+# - .env (Local/Docker Environment)
+# - android/app/google-services.json (Android Firebase)
+# - k8s/secret.yaml (Kubernetes Secret)
+# - k8s/configmap.yaml (Kubernetes ConfigMap)
 
 set -e
 
@@ -46,6 +52,8 @@ if [ -f "$TEMPLATE" ]; then
         -e "s|{{FIREBASE_PROJECT_ID}}|$(get_val FIREBASE_PROJECT_ID)|g" \
         -e "s|{{FIREBASE_STORAGE_BUCKET}}|$(get_val FIREBASE_STORAGE_BUCKET)|g" \
         -e "s|{{FIREBASE_PROJECT_NUMBER}}|$(get_val FIREBASE_MESSAGING_SENDER_ID)|g" \
+        -e "s|{{PACKAGE_NAME}}|$(get_val PACKAGE_NAME)|g" \
+        -e "s|{{GOOGLE_CLIENT_ID}}|$(get_val GOOGLE_CLIENT_ID)|g" \
         "$TEMPLATE" > "$TARGET"
 fi
 

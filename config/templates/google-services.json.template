@@ -9,10 +9,15 @@
       "client_info": {
         "mobilesdk_app_id": "{{FIREBASE_APP_ID}}",
         "android_client_info": {
-          "package_name": "com.example.hangul_play"
+          "package_name": "{{PACKAGE_NAME}}"
         }
       },
-      "oauth_client": [],
+      "oauth_client": [
+        {
+          "client_id": "{{GOOGLE_CLIENT_ID}}",
+          "client_type": 3
+        }
+      ],
       "api_key": [
         {
           "current_key": "{{FIREBASE_API_KEY}}"
@@ -20,7 +25,12 @@
       ],
       "services": {
         "appinvite_service": {
-          "other_platform_oauth_client": []
+          "other_platform_oauth_client": [
+            {
+              "client_id": "{{GOOGLE_CLIENT_ID}}",
+              "client_type": 3
+            }
+          ]
         }
       }
     }
