@@ -1,10 +1,12 @@
 import 'dart:ui' as ui;
 import 'package:flutter/material.dart';
 import 'dart:typed_data';
+import '../utils/sound_service.dart';
 
 class HandwritingCanvas extends StatefulWidget {
   final String targetChar;
   final bool isPuzzleMode;
+  final List<String> distractors;
   final Function(int score, double percentage) onComplete;
   final VoidCallback onClear;
 
@@ -14,6 +16,7 @@ class HandwritingCanvas extends StatefulWidget {
     required this.onComplete,
     required this.onClear,
     this.isPuzzleMode = false,
+    this.distractors = const [],
   });
 
   @override
@@ -31,6 +34,7 @@ class HandwritingCanvasState extends State<HandwritingCanvas> {
     super.initState();
     if (widget.isPuzzleMode) {
       _puzzlePieces.addAll(widget.targetChar.split(''));
+      _puzzlePieces.addAll(widget.distractors);
       _puzzlePieces.shuffle();
     }
   }
@@ -42,6 +46,7 @@ class HandwritingCanvasState extends State<HandwritingCanvas> {
       if (widget.isPuzzleMode) {
         _puzzlePieces.clear();
         _puzzlePieces.addAll(widget.targetChar.split(''));
+        _puzzlePieces.addAll(widget.distractors);
         _puzzlePieces.shuffle();
       }
     });
@@ -157,7 +162,7 @@ class HandwritingCanvasState extends State<HandwritingCanvas> {
             border: Border.all(color: const Color(0xFFFFD93D), width: 4),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.05),
+                color: Colors.black.withValues(alpha: 0.05),
                 blurRadius: 10,
                 spreadRadius: 2,
               )
@@ -181,13 +186,15 @@ class HandwritingCanvasState extends State<HandwritingCanvas> {
 
   Widget _buildPuzzleTarget(double fontSize) {
     return DragTarget<String>(
-      onWillAccept: (data) => data == widget.targetChar[_placedPieces.length],
-      onAccept: (data) {
+      onWillAcceptWithDetails: (details) => details.data == widget.targetChar[_placedPieces.length],
+      onAcceptWithDetails: (details) {
+        SoundService().playPop();
         setState(() {
-          _placedPieces.add(data);
-          _puzzlePieces.remove(data);
+          _placedPieces.add(details.data);
+          _puzzlePieces.remove(details.data);
         });
         if (_placedPieces.length == widget.targetChar.length) {
+          SoundService().playSuccess();
           submit();
         }
       },
@@ -201,7 +208,7 @@ class HandwritingCanvasState extends State<HandwritingCanvas> {
                 style: TextStyle(
                   fontSize: fontSize,
                   fontWeight: FontWeight.bold,
-                  color: Colors.grey.withOpacity(0.1),
+                  color: Colors.grey.withValues(alpha: 0.1),
                   letterSpacing: widget.targetChar.length > 1 ? 4.0 : 0.0,
                 ),
               ),
@@ -221,7 +228,7 @@ class HandwritingCanvasState extends State<HandwritingCanvas> {
             if (candidateData.isNotEmpty)
               Container(
                 decoration: BoxDecoration(
-                  color: Colors.yellow.withOpacity(0.1),
+                  color: Colors.yellow.withValues(alpha: 0.1),
                   borderRadius: BorderRadius.circular(16),
                 ),
               ),
@@ -251,7 +258,7 @@ class HandwritingCanvasState extends State<HandwritingCanvas> {
               style: TextStyle(
                 fontSize: fontSize,
                 fontWeight: FontWeight.bold,
-                color: Colors.grey.withOpacity(0.2),
+                color: Colors.grey.withValues(alpha: 0.2),
                 letterSpacing: widget.targetChar.length > 1 ? 4.0 : 0.0,
               ),
             ),
@@ -268,6 +275,7 @@ class HandwritingCanvasState extends State<HandwritingCanvas> {
   Widget _buildDraggablePiece(String char) {
     return Draggable<String>(
       data: char,
+      onDragStarted: () => SoundService().playPop(),
       feedback: Material(
         color: Colors.transparent,
         child: Container(

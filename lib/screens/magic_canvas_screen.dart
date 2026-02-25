@@ -90,45 +90,96 @@ class _MagicCanvasScreenState extends State<MagicCanvasScreen> {
       body: Stack(
         children: [
           SafeArea(
-            child: Center(
-              child: Column(
-                mainAxisAlignment: MainAxisAlignment.center,
-                children: [
-                   Text(
-                    _currentLevel.type == StageType.puzzle ? '🧩 조각을 맞춰봐요!' : '✍️ 예쁘게 써봐요!',
-                    style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.indigo),
-                  ),
-                  const SizedBox(height: 20),
-                  HandwritingCanvas(
-                    key: _canvasKey,
-                    targetChar: _currentTargetChar,
-                    isPuzzleMode: _currentLevel.type == StageType.puzzle,
-                    onClear: () {},
-                    onComplete: _handleScore,
-                  ),
-                  const SizedBox(height: 30),
-                  if (_currentLevel.type == StageType.drawing)
-                    ElevatedButton(
-                      onPressed: () => _canvasKey.currentState?.submit(),
-                      style: ElevatedButton.styleFrom(
-                        backgroundColor: const Color(0xFFB2E2F2),
-                        padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
-                        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
-                      ),
-                      child: const Text('다 썼어요!', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+            child: Column(
+              children: [
+                const SizedBox(height: 20),
+                _buildCharacter(),
+                Expanded(
+                  child: Center(
+                    child: Column(
+                      mainAxisAlignment: MainAxisAlignment.center,
+                      children: [
+                         Text(
+                          _currentLevel.type == StageType.puzzle ? '🧩 조각을 맞춰봐요!' : '✍️ 예쁘게 써봐요!',
+                          style: const TextStyle(fontSize: 22, fontWeight: FontWeight.bold, color: Colors.indigo),
+                        ),
+                        const SizedBox(height: 20),
+                        HandwritingCanvas(
+                          key: _canvasKey,
+                          targetChar: _currentTargetChar,
+                          isPuzzleMode: _currentLevel.type == StageType.puzzle,
+                          distractors: _currentLevel.targetChars.where((c) => c != _currentTargetChar).toList(),
+                          onClear: () {},
+                          onComplete: _handleScore,
+                        ),
+                        const SizedBox(height: 30),
+                        if (_currentLevel.type == StageType.drawing)
+                          ElevatedButton(
+                            onPressed: () => _canvasKey.currentState?.submit(),
+                            style: ElevatedButton.styleFrom(
+                              backgroundColor: const Color(0xFFB2E2F2),
+                              padding: const EdgeInsets.symmetric(horizontal: 40, vertical: 15),
+                              shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(30)),
+                            ),
+                            child: const Text('다 썼어요!', style: TextStyle(color: Colors.white, fontSize: 20, fontWeight: FontWeight.bold)),
+                          ),
+                      ],
                     ),
-                ],
-              ),
+                  ),
+                ),
+              ],
             ),
           ),
           if (_showSuccess)
             SuccessOverlay(
               scorePercentage: _lastScorePercentage,
               stars: _lastStars,
-              streak: 0, // Simplified for now
+              streak: 0, 
               confettiController: _confettiController,
               onDismiss: _next,
             ),
+        ],
+      ),
+    );
+  }
+
+  Widget _buildCharacter() {
+    return AnimatedContainer(
+      duration: const Duration(milliseconds: 500),
+      curve: Curves.elasticOut,
+      transform: _showSuccess ? (Matrix4.identity()..translate(0, -20)) : Matrix4.identity(),
+      child: Column(
+        children: [
+          if (_showSuccess)
+            const Icon(Icons.favorite, color: Colors.redAccent, size: 30),
+          Container(
+            height: 100,
+            width: 100,
+            decoration: const BoxDecoration(
+              image: DecorationImage(
+                image: AssetImage('assets/images/character_fairy.png'),
+                fit: BoxFit.contain,
+              ),
+            ),
+            // Fallback if image not loaded
+            child: Image.asset(
+              'assets/images/character_fairy.png',
+              errorBuilder: (context, error, stackTrace) => const Icon(Icons.face, size: 80, color: Colors.amber),
+            ),
+          ),
+          const SizedBox(height: 5),
+          Container(
+            padding: const EdgeInsets.symmetric(horizontal: 16, vertical: 4),
+            decoration: BoxDecoration(
+              color: Colors.white,
+              borderRadius: BorderRadius.circular(20),
+              border: Border.all(color: Colors.indigo.withValues(alpha: 0.2)),
+            ),
+            child: Text(
+              _showSuccess ? '정말 잘했어! 덩실덩실~' : '친구야, 같이 글자 놀이 하자!',
+              style: const TextStyle(fontSize: 14, fontWeight: FontWeight.bold, color: Colors.indigo),
+            ),
+          ),
         ],
       ),
     );
