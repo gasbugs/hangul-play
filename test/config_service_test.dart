@@ -9,6 +9,7 @@ void main() {
   group('ConfigService Tests', () {
     setUp(() {
       ConfigService.resetConfig();
+      rootBundle.evict('assets/config.json');
     });
 
     const mockConfig = {

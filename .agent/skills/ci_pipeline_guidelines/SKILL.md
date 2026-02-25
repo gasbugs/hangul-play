@@ -19,14 +19,17 @@ description: "CI 파이프라인 구성 지침: 단위, 통합, 보안 테스트
 
 - **상시 실행(Always Running)**: 모든 커밋(Commit) 또는 풀 리퀘스트(Pull Request) 발생 시 CI 파이프라인이 자동 실행되어야 합니다.
 - **실패 시 즉시 중단(Fail Fast)**: 어느 한 단계라도 실패하면 전체 프로세스를 중단하고 개발자에게 즉시 알림을 보내야 합니다.
-- **로컬 재현성(Local Reproducibility)**: CI 서버에서 수행되는 모든 검증 단계는 개발자의 로컬 환경(예: `Makefile`)에서도 동일하게 재현 가능해야 합니다.
+- **컨테이너 기반 실행(Container-based Execution)**: 환경 일관성과 의존성 격리를 위해 모든 빌드 및 테스트(단위, 통합, 보안)는 컨테이너 내에서 수행되어야 합니다.
+- **로컬 재현성(Local Reproducibility)**: CI 서버에서 수행되는 모든 검증 단계는 개발자의 로컬 환경에서도 동일한 컨테이너 이미지를 사용하여 재현 가능해야 합니다.
 
-## 3. 성공 기준 (Success Criteria)
+## 3. 아티팩트 및 산출물 (Artifacts & Deliverables)
 
-- 코드 커버리지(Code Coverage) 유지 및 향상.
-- 정적 분석(Static Analysis) 및 린트(Lint) 에러 제로(Zero) 유지.
-- 보안 감사(Security Audit) 통과 및 취약점 없음 확인.
+- **컨테이너화된 결과물(Containerized Artifacts)**: CI 프로세스의 최종 성공 결과물은 항상 컨테이너 이미지 형태로 산출되어야 합니다.
+- **성공 기준(Success Criteria)**:
+    - 코드 커버리지(Code Coverage) 유지 및 향상.
+    - 정적 분석(Static Analysis) 및 린트(Lint) 에러 제로(Zero) 유지.
+    - 보안 감사(Security Audit) 통과 및 취약점 없음 확인.
 
 ---
 
-**이 가이드라인의 효과:** 휴먼 에러(Human Error) 감소, 코드 품질 상향 평준화, 보안 위협 사전 차단.
+**이 가이드라인의 효과:** 환경 차이로 인한 문제 해결, 배포 속도 향상, 보안 및 품질의 일관성 보장.

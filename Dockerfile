@@ -20,6 +20,9 @@ COPY nginx.conf /etc/nginx/nginx.conf
 # Copy build files from build stage
 COPY --from=build-stage /app/build/web /usr/share/nginx/html
 
+# Create a symlink so the app can be served from the /hangul-play path without stripping
+RUN ln -s . /usr/share/nginx/html/hangul-play
+
 # Place configuration injection script into official nginx entrypoint directory
 COPY 30-inject-config.sh /docker-entrypoint.d/30-inject-config.sh
 RUN chmod +x /docker-entrypoint.d/30-inject-config.sh

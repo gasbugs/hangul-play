@@ -59,5 +59,6 @@ dist/
 .vercel
 
 # typescript
-*.tsbuildinfo
-next-env.d.ts
+# K8s & Helm (Private config)
+k8s/
+helm/

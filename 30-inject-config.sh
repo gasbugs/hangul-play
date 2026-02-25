@@ -30,3 +30,14 @@ for CONFIG_FILE in $FIND_PATHS; do
     break
   fi
 done
+
+# Also inject BASE_HREF into index.html if provided
+if [ -n "$BASE_HREF" ]; then
+  INDEX_FILE="/usr/share/nginx/html/index.html"
+  if [ -f "$INDEX_FILE" ]; then
+    echo "[Config] Injecting BASE_HREF=$BASE_HREF into $INDEX_FILE"
+    # Replace the placeholder or the default base href
+    sed -i "s|<base href=\"/\"|<base href=\"$BASE_HREF\"|g" "$INDEX_FILE"
+    sed -i "s|<base href=\"\$FLUTTER_BASE_HREF\"|<base href=\"$BASE_HREF\"|g" "$INDEX_FILE"
+  fi
+fi

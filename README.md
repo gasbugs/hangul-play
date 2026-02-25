@@ -24,12 +24,12 @@
     ```bash
     docker build -t hangul-play .
     ```
-2.  **컨테이너 실행** (런타임에 설정 주입):
+2.  **컨테이너 실행** (Docker Hub 이미지 사용):
     ```bash
     docker run -d -p 8080:8080 \
       -e FIREBASE_API_KEY="your_api_key" \
       -e FIREBASE_PROJECT_ID="your_project_id" \
-      hangul-play
+      gasbugs/hangul-play:latest
     ```
 
 ## 📜 라이선스
